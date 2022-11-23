@@ -1,4 +1,5 @@
 const showReport =() => {
+    //ajax call to the the 3rd and 4th api
     const DOMStrings = {
         download_button: document.getElementById("download-report"),
         report_heading: document.getElementById("report_heading")
@@ -9,6 +10,8 @@ const showReport =() => {
 }
 
 const getData =() => {
+    //ajax call to the api for frames 2nd api
+    //update frame and table
     const DOMStrings = {
         download_button: document.getElementById("download-report"),
         report_heading: document.getElementById("report_heading")
