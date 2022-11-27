@@ -1,38 +1,42 @@
-const showReport =() => {
+const showReport = () => {
     //ajax call to the the 3rd and 4th api
     var REST_CALL = "http://dummyurl/get-report";
-    // var REST_CALL ="https://www.boredapi.com/api/activity"
-    const fetchFinalData= _ => {
+    $("#frame-img").attr('src', 'blackBG.jpg');
+    // var REST_CALL = "https://www.boredapi.com/api/activity"
+    const fetchFinalData = _ => {
         $.ajax(
             {
-               type:'GET',
-               url:REST_CALL,
-               success: function(data){
-                document.getElementById("type-data").innerHTML = "Duration";
-                document.getElementById("sitting-prob").innerHTML = data.report.sitting + " minutes";
-                document.getElementById("standing-prob").innerHTML = data.report.standing + " minutes";
-                document.getElementById("sleeping-prob").innerHTML = data.report.sleeping + " minutes";
-                document.getElementById("eating-prob").innerHTML = data.report.eating + " minutes";
-                document.getElementById("falling-prob").innerHTML = data.report.falling + " minutes";
-                document.getElementById("walking-prob").innerHTML = data.report.walking + " minutes";
-                document.getElementById("pain-prob").innerHTML = data.report.pain + " minutes";
+                type: 'GET',
+                url: REST_CALL,
+                success: function (data) {
+                    document.getElementById("type-data").innerHTML = "Duration";
+                    document.getElementById("sitting-prob").innerHTML = data.report.sitting + " minutes";
+                    document.getElementById("standing-prob").innerHTML = data.report.standing + " minutes";
+                    document.getElementById("sleeping-prob").innerHTML = data.report.sleeping + " minutes";
+                    document.getElementById("eating-prob").innerHTML = data.report.eating + " minutes";
+                    document.getElementById("falling-prob").innerHTML = data.report.falling + " minutes";
+                    document.getElementById("walking-prob").innerHTML = data.report.walking + " minutes";
+                    document.getElementById("pain-prob").innerHTML = data.report.pain + " minutes";
 
-                //
-                // document.getElementById("sitting-prob").innerHTML = data.participants + " minutes";
-                // document.getElementById("standing-prob").innerHTML = data.link + " minutes";
-                // document.getElementById("sleeping-prob").innerHTML = data.key + " minutes";
-                // document.getElementById("eating-prob").innerHTML = data.price + " minutes";
-                // document.getElementById("falling-prob").innerHTML = data.accessibility + " minutes";
-                // document.getElementById("walking-prob").innerHTML = data.participants + " minutes";
-                // document.getElementById("pain-prob").innerHTML = data.accessibility + " minutes";
-            },
-            error: function (textStatus, errorThrown) {
-             alert("Error!!")
-         }
-         }
-      );
-     }
-     fetchFinalData()
+                    //
+                    // document.getElementById("sitting-prob").innerHTML = data.participants + " seconds";
+                    // document.getElementById("standing-prob").innerHTML = data.link + " seconds";
+                    // document.getElementById("sleeping-prob").innerHTML = data.key + " seconds";
+                    // document.getElementById("eating-prob").innerHTML = data.price + " seconds";
+                    // document.getElementById("falling-prob").innerHTML = data.accessibility + " seconds";
+                    // document.getElementById("walking-prob").innerHTML = data.participants + " seconds";
+                    // document.getElementById("pain-prob").innerHTML = data.accessibility + " seconds";
+                    
+                },
+                error: function (textStatus, errorThrown) {
+                    alert("Error!!")
+                }
+            }
+        );
+    }
+
+    fetchFinalData()
+
     const DOMStrings = {
         download_button: document.getElementById("download-report"),
         report_heading: document.getElementById("report_heading")
@@ -42,44 +46,59 @@ const showReport =() => {
     DOMStrings.report_heading.innerHTML = "Report"
 }
 
-const getData =() => {
+const getData = () => {
     //ajax call to the api for frames 2nd api
     //update frame and table
     // var SERVER_URL = window.location.protocol + "//" + window.location.host;
+    document.getElementById("loader").hidden=true;
+    document.getElementById("frame-img").hidden=false;
+
     var REST_CALL = "http://dummyurl/get-current-activity";
-    
-    const fetchImage = _ => {
-    $.ajax(
-        {
-           type:'GET',
-           url:REST_CALL,
-           success: function(data){
-    
-            if (typeof  data.current_frame!=="undefined"){
-                $("#frame-img").attr('src', data.current_frame);
-                document.getElementById("sitting-prob").innerHTML = data.current_activity.sitting;
-                document.getElementById("standing-prob").innerHTML = data.current_activity.standing;
-                document.getElementById("sleeping-prob").innerHTML = data.current_activity.sleeping;
-                document.getElementById("eating-prob").innerHTML = data.current_activity.eating;
-                document.getElementById("falling-prob").innerHTML = data.current_activity.falling;
-                document.getElementById("walking-prob").innerHTML = data.current_activity.walking;
-                document.getElementById("pain-prob").innerHTML = data.current_activity.pain;
+
+    const fetchApiData = _ => {
+        $.ajax(
+            {
+                type: 'GET',
+                url: REST_CALL,
+                success: function (data) {
+                    if (data === undefined || data.length == 0) {
+                    $("#frame-img").attr('src', 'blackBG.jpg');
+                        stopTimer()
+                    }
+
+                    // Render N frames in 2 second
+                    let calcTimeInMs = Math.floor(2*1000 / data.length);
+                    for (let i = 0; i < data.length; i++) {
+                        setTimeout(_ => setImgData(data[i]), (i + 1) * calcTimeInMs);
+                    }
+                },
+                error: function (textStatus, errorThrown) {
+                    alert("Error!!")
+                    $("#frame-img").attr('src', 'blackBG.jpg');
+                    stopTimer()
+                }
             }
-            else{
-                stopTimer()
-            }
-           },
-           error: function (textStatus, errorThrown) {
-            alert("Error!!")
-            stopTimer()
-        }
-        }
-     );
+        );
     }
-    const poll = _ => setInterval(_ => fetchImage(), 2*1000);
+
+    const setImgData = (apidata) => {
+
+        $("#frame-img").attr('src', apidata.current_frame);
+        document.getElementById("sitting-prob").innerHTML = apidata.current_activity.sitting;
+        document.getElementById("standing-prob").innerHTML = apidata.current_activity.standing;
+        document.getElementById("sleeping-prob").innerHTML = apidata.current_activity.sleeping;
+        document.getElementById("eating-prob").innerHTML = apidata.current_activity.eating;
+        document.getElementById("falling-prob").innerHTML = apidata.current_activity.falling;
+        document.getElementById("walking-prob").innerHTML = apidata.current_activity.walking;
+        document.getElementById("pain-prob").innerHTML = apidata.current_activity.pain;
+    }
+
+
+
+    const api_poll = _ => setInterval(_ => fetchApiData(), 2 * 1000);
     const stopTimer = _ => clearInterval(timer);
 
-    let timer = poll();
+    let timer = api_poll();
 
     const DOMStrings = {
         download_button: document.getElementById("download-report"),
@@ -90,7 +109,7 @@ const getData =() => {
     DOMStrings.report_heading.innerHTML = "Current Activity"
 }
 
-const downloadData=() => {
+const downloadData = () => {
     // for csv download
 
     // var csv='';
@@ -133,26 +152,28 @@ const downloadData=() => {
 
 
 
-$( 'form' ).submit(function ( e ) {
+$('form').submit(function (e) {
     e.preventDefault();
 
-    var REST_CALL ="http://dummyurl/upload-video"
+    var REST_CALL = "http://dummyurl/upload-video"
 
-    var fd = new FormData();    
-    fd.append( 'file', $( '#file' )[0].files[0] );
+    var fd = new FormData();
+    fd.append('file', $('#file')[0].files[0]);
     $.ajax({
-    url: REST_CALL,
-    data: fd,
-    processData: false,
-    contentType: false,
-    type: 'POST',
-    success: function(data){
-        alert(data.message);
-        $( 'form' ).find('input:file').val('');
-    },
-    error: function (textStatus, errorThrown) {
-        alert("Error!!")
-        $( 'form' ).find('input:file').val('');
-    }
+        url: REST_CALL,
+        data: fd,
+        processData: false,
+        contentType: false,
+        type: 'POST',
+        success: function (data) {
+            alert(data.message);
+            $('form').find('input:file').val('');
+            document.getElementById("loader").hidden=false;
+            document.getElementById("frame-img").hidden=true;
+        },
+        error: function (textStatus, errorThrown) {
+            alert("Error!!")
+            $('form').find('input:file').val('');
+        }
     });
 });
