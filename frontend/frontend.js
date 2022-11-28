@@ -1,7 +1,15 @@
+var timer=0
+const stopTimer = _ => clearInterval(timer);
+
+const pause =()=>{
+    stopTimer();
+    showReport();
+}
 const showReport = () => {
+    
     //ajax call to the the 3rd and 4th api
     var REST_CALL = "http://dummyurl/get-report";
-    $("#frame-img").attr('src', 'blackBG.jpg');
+    
     // var REST_CALL = "https://www.boredapi.com/api/activity"
     const fetchFinalData = _ => {
         $.ajax(
@@ -10,22 +18,18 @@ const showReport = () => {
                 url: REST_CALL,
                 success: function (data) {
                     document.getElementById("type-data").innerHTML = "Duration";
-                    document.getElementById("sitting-prob").innerHTML = data.report.sitting + " minutes";
-                    document.getElementById("standing-prob").innerHTML = data.report.standing + " minutes";
-                    document.getElementById("sleeping-prob").innerHTML = data.report.sleeping + " minutes";
-                    document.getElementById("eating-prob").innerHTML = data.report.eating + " minutes";
-                    document.getElementById("falling-prob").innerHTML = data.report.falling + " minutes";
-                    document.getElementById("walking-prob").innerHTML = data.report.walking + " minutes";
-                    document.getElementById("pain-prob").innerHTML = data.report.pain + " minutes";
-
-                    //
-                    // document.getElementById("sitting-prob").innerHTML = data.participants + " seconds";
-                    // document.getElementById("standing-prob").innerHTML = data.link + " seconds";
-                    // document.getElementById("sleeping-prob").innerHTML = data.key + " seconds";
-                    // document.getElementById("eating-prob").innerHTML = data.price + " seconds";
-                    // document.getElementById("falling-prob").innerHTML = data.accessibility + " seconds";
-                    // document.getElementById("walking-prob").innerHTML = data.participants + " seconds";
-                    // document.getElementById("pain-prob").innerHTML = data.accessibility + " seconds";
+                    if($("#table-content tbody tr").length > 0){
+                        console.log("Removing rows")
+                        $("#table-content tr:not(:first)").remove();
+                    }
+                    for (var key of Object.keys(data.report)) {
+                        var col1=key;
+                        var col2=data.report[col1]
+                        $('#table-content').append(`<tr>
+                       <td> ${col1}</td>
+                       <td>${col2} seconds</td
+                       </tr>`);
+                    }
                     
                 },
                 error: function (textStatus, errorThrown) {
@@ -62,7 +66,7 @@ const getData = () => {
                 url: REST_CALL,
                 success: function (data) {
                     if (data === undefined || data.length == 0) {
-                    $("#frame-img").attr('src', 'blackBG.jpg');
+                    // $("#frame-img").attr('src', 'blackBG.jpg');
                         stopTimer()
                     }
 
@@ -84,22 +88,25 @@ const getData = () => {
     const setImgData = (apidata) => {
 
         $("#frame-img").attr('src', apidata.current_frame);
-        document.getElementById("sitting-prob").innerHTML = apidata.current_activity.sitting;
-        document.getElementById("standing-prob").innerHTML = apidata.current_activity.standing;
-        document.getElementById("sleeping-prob").innerHTML = apidata.current_activity.sleeping;
-        document.getElementById("eating-prob").innerHTML = apidata.current_activity.eating;
-        document.getElementById("falling-prob").innerHTML = apidata.current_activity.falling;
-        document.getElementById("walking-prob").innerHTML = apidata.current_activity.walking;
-        document.getElementById("pain-prob").innerHTML = apidata.current_activity.pain;
+
+        if($("#table-content tbody tr").length > 0){
+            $("#table-content tr:not(:first)").remove();
+        }
+
+        for (var key of Object.keys(apidata.current_activity)) {
+            var col1=key;
+            var col2=apidata.current_activity[col1]
+            $('#table-content').append(`<tr>
+          <td> ${col1}</td>
+           <td>${col2} seconds</td
+           </tr>`);
+        }
     }
 
 
 
     const api_poll = _ => setInterval(_ => fetchApiData(), 2 * 1000);
-    const stopTimer = _ => clearInterval(timer);
-
-    let timer = api_poll();
-
+    timer = api_poll();
     const DOMStrings = {
         download_button: document.getElementById("download-report"),
         report_heading: document.getElementById("report_heading")
