@@ -1,15 +1,21 @@
-var timer=0
+var timer = 0
 const stopTimer = _ => clearInterval(timer);
 
-const pause =()=>{
+var frameBufferTimeInMs = 2 * 1000;
+var frameArray = [];
+
+const pause = () => {
     stopTimer();
+    for (let i = 0; i < frameArray.length; i++) {
+        clearTimeout(frameArray[i].timeout);
+    }
     showReport();
 }
 const showReport = () => {
-    
+
     //ajax call to the the 3rd and 4th api
     var REST_CALL = "http://dummyurl/get-report";
-    
+
     // var REST_CALL = "https://www.boredapi.com/api/activity"
     const fetchFinalData = _ => {
         $.ajax(
@@ -18,19 +24,19 @@ const showReport = () => {
                 url: REST_CALL,
                 success: function (data) {
                     document.getElementById("type-data").innerHTML = "Duration";
-                    if($("#table-content tbody tr").length > 0){
+                    if ($("#table-content tbody tr").length > 0) {
                         console.log("Removing rows")
                         $("#table-content tr:not(:first)").remove();
                     }
                     for (var key of Object.keys(data.report)) {
-                        var col1=key;
-                        var col2=data.report[col1]
+                        var col1 = key;
+                        var col2 = data.report[col1]
                         $('#table-content').append(`<tr>
                        <td> ${col1}</td>
                        <td>${col2} seconds</td
                        </tr>`);
                     }
-                    
+
                 },
                 error: function (textStatus, errorThrown) {
                     alert("Error!!")
@@ -54,8 +60,8 @@ const getData = () => {
     //ajax call to the api for frames 2nd api
     //update frame and table
     // var SERVER_URL = window.location.protocol + "//" + window.location.host;
-    document.getElementById("loader").hidden=true;
-    document.getElementById("frame-img").hidden=false;
+    document.getElementById("loader").hidden = true;
+    document.getElementById("frame-img").hidden = false;
 
     var REST_CALL = "http://dummyurl/get-current-activity";
 
@@ -66,14 +72,15 @@ const getData = () => {
                 url: REST_CALL,
                 success: function (data) {
                     if (data === undefined || data.length == 0) {
-                    // $("#frame-img").attr('src', 'blackBG.jpg');
+                        // $("#frame-img").attr('src', 'blackBG.jpg');
                         stopTimer()
                     }
 
                     // Render N frames in 2 second
-                    let calcTimeInMs = Math.floor(2*1000 / data.length);
+                    let calcTimeInMs = Math.floor(frameBufferTimeInMs / data.length);
+                    frameArray = [];
                     for (let i = 0; i < data.length; i++) {
-                        setTimeout(_ => setImgData(data[i]), (i + 1) * calcTimeInMs);
+                        frameArray.push({ timeout: setTimeout(_ => setImgData(data[i]), (i + 1) * calcTimeInMs) });
                     }
                 },
                 error: function (textStatus, errorThrown) {
@@ -89,23 +96,23 @@ const getData = () => {
 
         $("#frame-img").attr('src', apidata.current_frame);
 
-        if($("#table-content tbody tr").length > 0){
+        if ($("#table-content tbody tr").length > 0) {
             $("#table-content tr:not(:first)").remove();
         }
 
         for (var key of Object.keys(apidata.current_activity)) {
-            var col1=key;
-            var col2=apidata.current_activity[col1]
+            var col1 = key;
+            var col2 = apidata.current_activity[col1]
             $('#table-content').append(`<tr>
           <td> ${col1}</td>
-           <td>${col2} seconds</td
+           <td>${col2}</td
            </tr>`);
         }
     }
 
 
 
-    const api_poll = _ => setInterval(_ => fetchApiData(), 2 * 1000);
+    const api_poll = _ => setInterval(_ => fetchApiData(), frameBufferTimeInMs);
     timer = api_poll();
     const DOMStrings = {
         download_button: document.getElementById("download-report"),
@@ -175,8 +182,8 @@ $('form').submit(function (e) {
         success: function (data) {
             alert(data.message);
             $('form').find('input:file').val('');
-            document.getElementById("loader").hidden=false;
-            document.getElementById("frame-img").hidden=true;
+            document.getElementById("loader").hidden = false;
+            document.getElementById("frame-img").hidden = true;
         },
         error: function (textStatus, errorThrown) {
             alert("Error!!")
